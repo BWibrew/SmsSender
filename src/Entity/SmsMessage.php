@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\SmsMessageRepository")
+ * @ORM\HasLifecycleCallbacks
  */
 class SmsMessage
 {
@@ -40,6 +41,13 @@ class SmsMessage
      * @ORM\Column(type="string", length=20)
      */
     private $status;
+
+    public function __construct()
+    {
+        $this->status = 'new';
+        $this->created_at = new \DateTime();
+        $this->updated_at = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -104,5 +112,14 @@ class SmsMessage
         $this->status = $status;
 
         return $this;
+    }
+
+    /**
+     * @ORM\PrePersist
+     * @ORM\PreUpdate
+     */
+    public function updateTimestamp(): void
+    {
+        $this->updated_at = new \DateTime();
     }
 }

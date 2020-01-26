@@ -8,7 +8,7 @@
         <p class="lead">
             Your SMS messages are listed below:
         </p>
-        <a class="btn btn-primary btn-lg" href="#">Send new SMS</a>
+        <a class="btn btn-primary btn-lg" href="{{ path('create') }}">Send new SMS</a>
     </div>
 
     {% for message in messages %}
