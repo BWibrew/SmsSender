@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber as AssertPhoneNumber;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\SmsMessageRepository")
@@ -19,11 +21,19 @@ class SmsMessage
 
     /**
      * @ORM\Column(type="string", length=20)
+     * @Assert\NotBlank
+     * @Assert\Type("numeric")
+     * @AssertPhoneNumber(defaultRegion="GB")
+     * valid phone number
      */
     private $recipient;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank
+     * @Assert\Type("string")
+     * @Assert\Length(max="140")
+     * max 140 chars
      */
     private $body;
 
