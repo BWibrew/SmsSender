@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}SMS Sender{% endblock %}
+
+{% block body %}
+    <div class="text-center mb-5">
+        <h1>SMS Sender</h1>
+        <p class="lead">
+            Your SMS messages are listed below:
+        </p>
+        <a class="btn btn-primary btn-lg" href="{{ path('create') }}">Send new SMS</a>
+    </div>
+
+    {% for message in messages %}
+        <div class="card mb-2">
+            <div class="card-header">
+                <strong>Message Recipient:</strong> {{ message.recipient }}
+            </div>
+            <div class="card-body">
+                <div class="card-title">
+                    <strong>Message:</strong> <em>{{ message.body }}</em>
+                </div>
+                <p><strong>Status:</strong> {{ message.status }}</p>
+                <p><strong>Created at:</strong> {{ message.createdat|date('F jS \\a\\t g:ia') }}</p>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
