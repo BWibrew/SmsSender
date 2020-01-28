@@ -12,6 +12,7 @@ class SmsMessagesControllerTest extends WebTestCase
         $client->request('GET', '/');
 
         $this->assertResponseIsSuccessful();
+        $this->assertSelectorTextContains('.card-header', '01792548317');
     }
 
     public function testDisplaysCreateNew(): void
@@ -28,7 +29,7 @@ class SmsMessagesControllerTest extends WebTestCase
         $client->request('GET', '/create');
 
         $client->submitForm('Send', [
-            'sms_message[recipient]' => '123456',
+            'sms_message[recipient]' => '01792548317',
             'sms_message[body]' => 'Hello World!',
         ]);
 

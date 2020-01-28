@@ -14,17 +14,14 @@
     {% for message in messages %}
         <div class="card mb-2">
             <div class="card-header">
-                <strong>Message Recipient:</strong> {{ message['recipient'] }}
+                <strong>Message Recipient:</strong> {{ message.recipient }}
             </div>
             <div class="card-body">
                 <div class="card-title">
-                    <strong>Message:</strong> <em>{{ message['body'] }}</em>
+                    <strong>Message:</strong> <em>{{ message.body }}</em>
                 </div>
-                <p><strong>Status:</strong> {{ message['status'] }}</p>
-                {% if message['error_message'] %}
-                    <p class="text-danger"><strong>Error message:</strong> {{ message['error_message'] }}</p>
-                {% endif %}
-                <p><strong>Created at:</strong> {{ message['created_at'] }}</p>
+                <p><strong>Status:</strong> {{ message.status }}</p>
+                <p><strong>Created at:</strong> {{ message.createdat|date('F jS \\a\\t g:ia') }}</p>
             </div>
         </div>
     {% endfor %}

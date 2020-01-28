@@ -20,35 +20,8 @@ class SmsMessagesController extends AbstractController
      */
     public function index(): Response
     {
-        $messages = [
-            [
-                'recipient' => 123456,
-                'body' => 'Hello World!',
-                'status' => 'sent',
-                'created_at' => date('d-m-y h:m'),
-                'sent_at' => date('d-m-y h:m'),
-                'error_message' => null,
-            ],
-            [
-                'recipient' => 654321,
-                'body' => 'Foobar!',
-                'status' => 'queued',
-                'created_at' => date('d-m-y h:m'),
-                'sent_at' => null,
-                'error_message' => null,
-            ],
-            [
-                'recipient' => 987654,
-                'body' => 'Bizbaz!',
-                'status' => 'failed',
-                'created_at' => date('d-m-y h:m'),
-                'sent_at' => null,
-                'error_message' => 'The message failed to send!',
-            ]
-        ];
-
         return $this->render('index.html.twig', [
-            'messages' => $messages,
+            'messages' => $this->getDoctrine()->getRepository(SmsMessage::class)->findAllSortedByCreatedAt(),
         ]);
     }
 
