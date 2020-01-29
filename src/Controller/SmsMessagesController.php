@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\SmsMessage;
 use App\Form\SmsMessageType;
-use DateTime;
+use App\Producer\SendSmsProducer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,15 +28,18 @@ class SmsMessagesController extends AbstractController
     /**
      * @Route("/create", name="create")
      * @param Request $request
+     * @param SendSmsProducer $producer
      * @return Response
      */
-    public function createNew(Request $request): Response
+    public function createNew(Request $request, SendSmsProducer $producer): Response
     {
         $form = $this->createForm(SmsMessageType::class, new SmsMessage());
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->persistSmsMessageEntity($form->getData());
+            $smsMessage = $this->persistSmsMessageEntity($form->getData());
+
+            $producer->publish(serialize($smsMessage));
 
             return $this->redirectToRoute('index');
         }
@@ -50,11 +53,14 @@ class SmsMessagesController extends AbstractController
      * Persist the SmsMessage entity to the database.
      *
      * @param $smsMessageData
+     * @return SmsMessage
      */
-    protected function persistSmsMessageEntity($smsMessageData): void
+    protected function persistSmsMessageEntity($smsMessageData): SmsMessage
     {
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($smsMessageData);
         $entityManager->flush();
+
+        return $smsMessageData;
     }
 }
