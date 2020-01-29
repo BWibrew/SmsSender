@@ -14,6 +14,7 @@ services:
         environment:
             - DATABASE_URL=mysql://smssender:secret@db:3306/smssender?serverVersion=8
             - RABBITMQ_URL=amqp://guest:guest@queue:5672/smssender?lazy=1&connection_timeout=6
+            - REDIS_URL=redis://ratelimiter
         working_dir: /var/www
         volumes:
             - ./:/var/www
