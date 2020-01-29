@@ -6,11 +6,13 @@ services:
         container_name: app
         depends_on:
             - db
+            - queue
         restart: unless-stopped
         env_file:
             - .env
         environment:
             - DATABASE_URL=mysql://smssender:secret@db:3306/smssender?serverVersion=8
+            - RABBITMQ_URL=amqp://guest:guest@queue:5672/smssender?lazy=1&connection_timeout=6
         working_dir: /var/www
         volumes:
             - ./:/var/www
@@ -44,7 +46,21 @@ services:
         volumes:
             - db_data:/var/lib/mysql
 
+    queue:
+        image: rabbitmq:management-alpine
+        container_name: queue
+        restart: unless-stopped
+        environment:
+            RABBITMQ_DEFAULT_VHOST: smssender
+        ports:
+            - 5672:5672
+            - 15672:15672
+        volumes:
+            - queue_data:/var/lib/rabbitmq
+
 volumes:
     db_data:
+
+    queue_data:
 
 
