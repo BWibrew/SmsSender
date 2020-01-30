@@ -16,4 +16,5 @@ return [
     DAMA\DoctrineTestBundle\DAMADoctrineTestBundle::class => ['test' => true],
     OldSound\RabbitMqBundle\OldSoundRabbitMqBundle::class => ['all' => true],
     Snc\RedisBundle\SncRedisBundle::class => ['all' => true],
+    Noxlogic\RateLimitBundle\NoxlogicRateLimitBundle::class => ['all' => true],
 ];
