@@ -3,75 +3,34 @@
 namespace App\Consumer;
 
 use App\Entity\SmsMessage;
+use App\Service\TwilioService;
 use OldSound\RabbitMqBundle\RabbitMq\ConsumerInterface;
 use PhpAmqpLib\Message\AMQPMessage;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Twilio\Exceptions\TwilioException;
-use Twilio\Rest\Api\V2010\Account\MessageInstance;
-use Twilio\Rest\Client;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class SendSmsConsumer implements ConsumerInterface
 {
-    protected const COUNTRY_CODE = 'GB';
-
     /**
-     * @var Client
+     * @var TwilioService
      */
     protected $twilio;
 
     /**
-     * @var ParameterBagInterface
+     * @var SerializerInterface
      */
-    protected $params;
+    protected $serializer;
 
-    public function __construct(Client $twilio, ParameterBagInterface $params)
+    public function __construct(TwilioService $twilio, SerializerInterface $serializer)
     {
         $this->twilio = $twilio;
-        $this->params = $params;
+        $this->serializer = $serializer;
     }
 
-    public function execute(AMQPMessage $msg)
+    public function execute(AMQPMessage $message)
     {
         /** @var SmsMessage $smsMessage */
-        $smsMessage = unserialize($msg->getBody(), ['allowed_classes' => [SmsMessage::class]]);
+        $smsMessage = $this->serializer->deserialize($message->getBody(), SmsMessage::class, 'json');
 
-        try {
-            $response = $this->submitSmsMessage($smsMessage);
-        } catch (TwilioException $exception) {
-            //
-        }
-    }
-
-    /**
-     * Submit the SMS message to the Twilio API.
-     *
-     * @param $smsMessage
-     * @return MessageInstance
-     * @throws TwilioException
-     */
-    protected function submitSmsMessage(SmsMessage $smsMessage): MessageInstance
-    {
-        return $this->twilio->messages->create(
-            $this->formatPhoneNumber($smsMessage->getRecipient()),
-            [
-                'from' => $this->params->get('app.twilio_number'),
-                'body' => $smsMessage->getBody()
-            ]
-        );
-    }
-
-    /**
-     * Format the recipient phone number to E.164 standard.
-     * @param string $unformatedNumber
-     * @return string
-     * @throws TwilioException
-     */
-    protected function formatPhoneNumber(string $unformatedNumber): string
-    {
-        $response = $this->twilio->lookups->v1->phoneNumbers($unformatedNumber)->fetch([
-            'countryCode' => self::COUNTRY_CODE
-        ]);
-
-        return $response->phoneNumber;
+        $this->twilio->createSmsMessage($smsMessage);
     }
 }

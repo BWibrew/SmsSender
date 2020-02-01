@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class SmsMessagesController extends AbstractController
 {
@@ -29,9 +30,10 @@ class SmsMessagesController extends AbstractController
      * @Route("/create", name="create")
      * @param Request $request
      * @param SendSmsProducer $producer
+     * @param SerializerInterface $serializer
      * @return Response
      */
-    public function createNew(Request $request, SendSmsProducer $producer): Response
+    public function createNew(Request $request, SendSmsProducer $producer, SerializerInterface $serializer): Response
     {
         $form = $this->createForm(SmsMessageType::class, new SmsMessage());
 
@@ -39,7 +41,7 @@ class SmsMessagesController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $smsMessage = $this->persistSmsMessageEntity($form->getData());
 
-            $producer->publish(serialize($smsMessage));
+            $producer->publish($serializer->serialize($smsMessage, 'json'));
 
             return $this->redirectToRoute('index');
         }
