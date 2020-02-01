@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\SmsMessage;
 use App\Form\SmsMessageType;
-use DateTime;
+use Noxlogic\RateLimitBundle\Annotation\RateLimit;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +27,7 @@ class SmsMessagesController extends AbstractController
 
     /**
      * @Route("/create", name="create")
+     * @RateLimit(methods={"POST", "PUT"}, limit=1, period=15)
      * @param Request $request
      * @return Response
      */
