@@ -1,0 +1,4 @@
+noxlogic_rate_limit:
+    storage_engine: redis
+    enabled: true
+    redis_client: default
