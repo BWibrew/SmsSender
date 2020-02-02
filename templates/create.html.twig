@@ -3,7 +3,13 @@
 {% block title %}SMS Sender - Create new{% endblock %}
 
 {% block body %}
-    <div class="card p-5">
-        {{ form(form) }}
+    <div class="card p-3">
+        <div class="card-body">
+            <div class="card-title">
+                <h2>Send an SMS message with Twilio</h2>
+            </div>
+            {{ form(form) }}
+            <a href="{{ url('index') }}" class="btn btn-secondary">Back</a>
+        </div>
     </div>
 {% endblock %}
