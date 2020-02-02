@@ -22,7 +22,7 @@ class SmsMessagesController extends AbstractController
     public function index(): Response
     {
         return $this->render('index.html.twig', [
-            'messages' => $this->getDoctrine()->getRepository(SmsMessage::class)->findAllSortedByCreatedAt(),
+            'messages' => $this->getSmsMessageRepository()->findAllSortedByCreatedAt(),
         ]);
     }
 
@@ -39,9 +39,11 @@ class SmsMessagesController extends AbstractController
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $smsMessage = $this->persistSmsMessageEntity($form->getData());
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($form->getData());
+            $entityManager->flush();
 
-            $producer->publish($serializer->serialize($smsMessage, 'json'));
+            $producer->publish($serializer->serialize($form->getData(), 'json'));
 
             return $this->redirectToRoute('index');
         }
@@ -52,17 +54,28 @@ class SmsMessagesController extends AbstractController
     }
 
     /**
-     * Persist the SmsMessage entity to the database.
-     *
-     * @param $smsMessageData
-     * @return SmsMessage
+     * @Route("/twilio-callback", name="twilio_callback")
+     * @param Request $request
+     * @return Response
      */
-    protected function persistSmsMessageEntity($smsMessageData): SmsMessage
+    public function handleCallback(Request $request): Response
     {
         $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->persist($smsMessageData);
-        $entityManager->flush();
+        $smsMessage = $this->getSmsMessageRepository()->findOneBy(['twilio_sid' => $request->get('MessageSid')]);
 
-        return $smsMessageData;
+        if ($smsMessage) {
+            $smsMessage->setStatus($request->get('MessageStatus'));
+            $entityManager->flush();
+        }
+
+        return new Response();
+    }
+
+    /**
+     * @return \App\Repository\SmsMessageRepository
+     */
+    protected function getSmsMessageRepository(): \App\Repository\SmsMessageRepository
+    {
+        return $this->getDoctrine()->getRepository(SmsMessage::class);
     }
 }

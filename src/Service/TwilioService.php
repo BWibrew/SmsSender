@@ -17,11 +17,19 @@ class TwilioService
     protected const COUNTRY_CODE = 'GB';
 
     /**
+     * SmsMessage status when TwilioException is thrown.
+     */
+    protected const ERROR_STATUS = 'error';
+
+    /**
      * Symfony parameter identifier for 'from' number.
      */
     protected const TWILIO_FROM_NUMBER = 'app.twilio_number';
 
-    protected const ERROR_STATUS = 'error';
+    /**
+     * Symfony parameter identifier for callback url.
+     */
+    protected const TWILIO_CALLBACK_URL = 'app.twilio_callback_url';
 
     /**
      * @var Client
@@ -38,6 +46,13 @@ class TwilioService
      */
     protected $entityManager;
 
+    /**
+     * TwilioService constructor.
+     *
+     * @param Client $twilio
+     * @param ParameterBagInterface $parameters
+     * @param EntityManagerInterface $entityManager
+     */
     public function __construct(
         Client $twilio,
         ParameterBagInterface $parameters,
@@ -58,23 +73,27 @@ class TwilioService
     {
         $smsMessage = $this->entityManager->getRepository(SmsMessage::class)->find($smsMessage->getId());
 
-        try {
-            $response = $this->twilio->messages->create(
-                $this->formatPhoneNumber($smsMessage->getRecipient()),
-                [
-                    'from' => $this->parameters->get(self::TWILIO_FROM_NUMBER),
-                    'body' => $smsMessage->getBody()
-                ]
-            );
+        if ($smsMessage) {
+            try {
+                $response = $this->twilio->messages->create(
+                    $this->formatPhoneNumber($smsMessage->getRecipient()),
+                    [
+                        'from' => $this->parameters->get(self::TWILIO_FROM_NUMBER),
+                        'body' => $smsMessage->getBody(),
+                        'statusCallback' => $this->parameters->get(self::TWILIO_CALLBACK_URL),
+                    ]
+                );
 
-            $smsMessage->setStatus($response->status);
-            $this->entityManager->flush();
+                $smsMessage->setStatus($response->status);
+                $smsMessage->setTwilioSid($response->sid);
+                $this->entityManager->flush();
 
-            return $response;
-        } catch (TwilioException $exception) {
-            $smsMessage->setStatus(self::ERROR_STATUS);
-            $smsMessage->setErrorMessage($exception->getMessage());
-            $this->entityManager->flush();
+                return $response;
+            } catch (TwilioException $exception) {
+                $smsMessage->setStatus(self::ERROR_STATUS);
+                $smsMessage->setErrorMessage($exception->getMessage());
+                $this->entityManager->flush();
+            }
         }
 
         return null;
