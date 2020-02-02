@@ -35,4 +35,14 @@ class SmsMessagesControllerTest extends WebTestCase
 
         $this->assertResponseRedirects('/');
     }
+
+    public function testTwilioCallbackUpdatesStatus(): void
+    {
+        $client = static::createClient();
+        $client->request('POST', '/twilio-callback', [
+            'MessageStatus' => 'sent',
+        ]);
+
+        $this->assertResponseIsSuccessful();
+    }
 }

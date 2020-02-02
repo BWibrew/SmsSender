@@ -30,7 +30,8 @@
         "symfony/twig-pack": "*",
         "symfony/validator": "4.4.*",
         "symfony/web-link": "4.4.*",
-        "symfony/yaml": "4.4.*"
+        "symfony/yaml": "4.4.*",
+        "twilio/sdk": "^5.42"
     },
     "require-dev": {
         "dama/doctrine-test-bundle": "^6.3",

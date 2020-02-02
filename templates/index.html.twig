@@ -21,6 +21,9 @@
                     <strong>Message:</strong> <em>{{ message.body }}</em>
                 </div>
                 <p><strong>Status:</strong> {{ message.status }}</p>
+                {% if message.errorMessage %}
+                    <p><strong>Error message:</strong> {{ message.errorMessage }}</p>
+                {% endif %}
                 <p><strong>Created at:</strong> {{ message.createdat|date('F jS \\a\\t g:ia') }}</p>
             </div>
         </div>

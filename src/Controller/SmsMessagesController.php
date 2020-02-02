@@ -4,11 +4,13 @@ namespace App\Controller;
 
 use App\Entity\SmsMessage;
 use App\Form\SmsMessageType;
+use App\Producer\SendSmsProducer;
 use Noxlogic\RateLimitBundle\Annotation\RateLimit;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class SmsMessagesController extends AbstractController
 {
@@ -21,7 +23,7 @@ class SmsMessagesController extends AbstractController
     public function index(): Response
     {
         return $this->render('index.html.twig', [
-            'messages' => $this->getDoctrine()->getRepository(SmsMessage::class)->findAllSortedByCreatedAt(),
+            'messages' => $this->getSmsMessageRepository()->findAllSortedByCreatedAt(),
         ]);
     }
 
@@ -29,15 +31,21 @@ class SmsMessagesController extends AbstractController
      * @Route("/create", name="create")
      * @RateLimit(methods={"POST", "PUT"}, limit=1, period=15)
      * @param Request $request
+     * @param SendSmsProducer $producer
+     * @param SerializerInterface $serializer
      * @return Response
      */
-    public function createNew(Request $request): Response
+    public function createNew(Request $request, SendSmsProducer $producer, SerializerInterface $serializer): Response
     {
         $form = $this->createForm(SmsMessageType::class, new SmsMessage());
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->persistSmsMessageEntity($form->getData());
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($form->getData());
+            $entityManager->flush();
+
+            $producer->publish($serializer->serialize($form->getData(), 'json'));
 
             return $this->redirectToRoute('index');
         }
@@ -48,14 +56,28 @@ class SmsMessagesController extends AbstractController
     }
 
     /**
-     * Persist the SmsMessage entity to the database.
-     *
-     * @param $smsMessageData
+     * @Route("/twilio-callback", name="twilio_callback")
+     * @param Request $request
+     * @return Response
      */
-    protected function persistSmsMessageEntity($smsMessageData): void
+    public function handleCallback(Request $request): Response
     {
         $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->persist($smsMessageData);
-        $entityManager->flush();
+        $smsMessage = $this->getSmsMessageRepository()->findOneBy(['twilio_sid' => $request->get('MessageSid')]);
+
+        if ($smsMessage) {
+            $smsMessage->setStatus($request->get('MessageStatus'));
+            $entityManager->flush();
+        }
+
+        return new Response();
+    }
+
+    /**
+     * @return \App\Repository\SmsMessageRepository
+     */
+    protected function getSmsMessageRepository(): \App\Repository\SmsMessageRepository
+    {
+        return $this->getDoctrine()->getRepository(SmsMessage::class);
     }
 }
