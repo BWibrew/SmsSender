@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\SmsMessage;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Twilio\Exceptions\TwilioException;
 use Twilio\Rest\Api\V2010\Account\MessageInstance;
@@ -20,6 +21,8 @@ class TwilioService
      */
     protected const TWILIO_FROM_NUMBER = 'app.twilio_number';
 
+    protected const ERROR_STATUS = 'error';
+
     /**
      * @var Client
      */
@@ -30,28 +33,51 @@ class TwilioService
      */
     protected $parameters;
 
-    public function __construct(Client $twilio, ParameterBagInterface $parameters)
-    {
+    /**
+     * @var EntityManagerInterface
+     */
+    protected $entityManager;
+
+    public function __construct(
+        Client $twilio,
+        ParameterBagInterface $parameters,
+        EntityManagerInterface $entityManager
+    ) {
         $this->twilio = $twilio;
         $this->parameters = $parameters;
+        $this->entityManager = $entityManager;
     }
 
     /**
      * Submit the SMS message to the Twilio API.
      *
      * @param $smsMessage
-     * @return MessageInstance
-     * @throws TwilioException
+     * @return MessageInstance|null
      */
-    public function createSmsMessage(SmsMessage $smsMessage): MessageInstance
+    public function createSmsMessage(SmsMessage $smsMessage): ?MessageInstance
     {
-        return $this->twilio->messages->create(
-            $this->formatPhoneNumber($smsMessage->getRecipient()),
-            [
-                'from' => $this->parameters->get(self::TWILIO_FROM_NUMBER),
-                'body' => $smsMessage->getBody()
-            ]
-        );
+        $smsMessage = $this->entityManager->getRepository(SmsMessage::class)->find($smsMessage->getId());
+
+        try {
+            $response = $this->twilio->messages->create(
+                $this->formatPhoneNumber($smsMessage->getRecipient()),
+                [
+                    'from' => $this->parameters->get(self::TWILIO_FROM_NUMBER),
+                    'body' => $smsMessage->getBody()
+                ]
+            );
+
+            $smsMessage->setStatus($response->status);
+            $this->entityManager->flush();
+
+            return $response;
+        } catch (TwilioException $exception) {
+            $smsMessage->setStatus(self::ERROR_STATUS);
+            $smsMessage->setErrorMessage($exception->getMessage());
+            $this->entityManager->flush();
+        }
+
+        return null;
     }
 
     /**
