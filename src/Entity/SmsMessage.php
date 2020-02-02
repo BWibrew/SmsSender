@@ -57,6 +57,11 @@ class SmsMessage
      */
     private $error_message;
 
+    /**
+     * @ORM\Column(type="string", length=100, nullable=true)
+     */
+    private $twilio_sid;
+
     public function __construct()
     {
         $this->status = 'new';
@@ -153,6 +158,18 @@ class SmsMessage
     public function setErrorMessage(?string $error_message): self
     {
         $this->error_message = $error_message;
+
+        return $this;
+    }
+
+    public function getTwilioSid(): ?string
+    {
+        return $this->twilio_sid;
+    }
+
+    public function setTwilioSid(?string $twilio_sid): self
+    {
+        $this->twilio_sid = $twilio_sid;
 
         return $this;
     }
