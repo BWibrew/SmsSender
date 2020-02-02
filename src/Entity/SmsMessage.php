@@ -52,6 +52,11 @@ class SmsMessage
      */
     private $status;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $error_message;
+
     public function __construct()
     {
         $this->status = 'new';
@@ -62,6 +67,13 @@ class SmsMessage
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getRecipient(): ?string
@@ -131,5 +143,17 @@ class SmsMessage
     public function updateTimestamp(): void
     {
         $this->updated_at = new \DateTime();
+    }
+
+    public function getErrorMessage(): ?string
+    {
+        return $this->error_message;
+    }
+
+    public function setErrorMessage(?string $error_message): self
+    {
+        $this->error_message = $error_message;
+
+        return $this;
     }
 }
